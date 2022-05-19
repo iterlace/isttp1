@@ -50,3 +50,5 @@ venv3.8
 
 # Other
 local.env
+
+static_collected/

@@ -1,0 +1,26 @@
+{% load static cache %}
+
+<!DOCTYPE html>
+<html lang="uk-UA">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>{% block title %}Головна{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    {% block extrahead %}{% endblock %}
+</head>
+
+<body id="body" class="">
+<div class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
+    <div class="container">
+        {% block body %}
+        {% endblock %}
+    </div>
+</div>
+</body>
+
+{% block js_footer %}{% endblock %}
+
+</html>
