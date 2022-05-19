@@ -1,0 +1,33 @@
+[flake8]
+max-line-length = 88
+exclude = [".git", "__pycache__", "__init__.py", ".mypy_cache", "migrations", ".pytest_cache", "venv", ".venv"]
+extend-ignore = ["E203", "E501"]
+
+[tool.isort]
+profile = "black"
+src_paths = ["core", "account", "petition"]
+known_django = ["django", "rest_framework", "rest_framework_simplejwt", "dal", "corsheaders",
+                "dbsettings", "environ", "django_extensions", "django_filters", "prettyjson",
+                "drf_multiple_model", "rest_framework_swagger", "rest_framework_constant",
+                "rest_framework_xml", "fcm_django"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLDER"]
+line_length = 88
+group_by_package = true
+skip_glob = "*/migrations/*,*/venv/*,*/.venv/*,*/__init__.py"
+skip = ["migrations"]
+
+[tool.black]
+target-version = ["py310"]
+force-exclude = '''
+/(
+  \.git
+  |\.venv
+  |venv
+  |\.mypy_cache
+  |\.pytest_cache
+  |__pycache__
+  |__init__\.py
+  |migrations
+)/
+'''
+line_length = 88

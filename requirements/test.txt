@@ -1,0 +1,8 @@
+-r ./base.txt
+
+pytest-asyncio==0.14.0
+pytest-django==4.1.0
+pytest-env==0.6.2
+pytest-mock==3.6.1
+factory-boy==3.2.0
+pytest-factoryboy==2.1.0
