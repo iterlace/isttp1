@@ -134,4 +134,4 @@ class PetitionNotification(models.Model):
     class Meta:
         verbose_name = "Petition News"
         verbose_name_plural = "Petition News"
-        db_table = "petition_news"
+        db_table = "petition_notifications"

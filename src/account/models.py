@@ -4,17 +4,55 @@ import uuid
 from typing import List, Optional
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
-from django.db.models import Q
-from django.db.models.functions import Greatest, Upper
-from django.db.models.indexes import Index
 from django.utils import timezone
-from django.utils.html import format_html
-from django.utils.timezone import timedelta
-from django.utils.translation import get_language
-from django.utils.translation import gettext_lazy as _
+
+
+class UserQuerySet(models.QuerySet):
+    pass
+
+
+class UserManager(
+    models.manager.BaseManager.from_queryset(UserQuerySet),
+    BaseUserManager,
+):
+    def _create_user(self, email, password, is_staff, is_superuser, **extra_fields):
+        """
+        Create and save an User with the given phone and password.
+        :param str email: user email
+        :param str password: user password
+        :param bool is_staff: whether user staff or not
+        :param bool is_superuser: whether user admin or not
+        :return custom_user.models.User user: user
+        :raises ValueError: phone is not set
+        """
+        now = timezone.now()
+        if not email:
+            raise ValueError("The email is not set!")
+
+        user = self.model(
+            email=email,
+            is_staff=is_staff,
+            is_superuser=is_superuser,
+            last_login=now,
+            date_joined=now,
+            **extra_fields,
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra_fields):
+        is_staff = extra_fields.pop("is_staff", False)
+        return self._create_user(email, password, is_staff, False, **extra_fields)
+
+    def create_superuser(self, email, password, **extra_fields):
+        return self._create_user(email, password, True, True, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -27,9 +65,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     date_joined = models.DateTimeField("Date joined", default=timezone.now)
 
-    is_admin = models.BooleanField("Is admin", default=False)
+    is_staff = models.BooleanField("Is admin", default=False)
 
     USERNAME_FIELD = "email"
+    objects = UserManager()
 
     class Meta:
         verbose_name = "user"

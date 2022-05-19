@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / dll
+__pycache__/
+*.py[cod]
+*$py.class
+.vscode
+backend/
+Prod-plink/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.exe
+
+# Translations
+*.pot
+
+# Django stuff:
+*.log
+local.py
+
+# celery beat schedule file
+celerybeat-schedule
+
+
+# Environments
+.env/
+.env_old/
+.evn2/
+.venv
+env/
+venv/
+ENV/
+venv3.8
+
+# PyCharm
+.idea/
+
+# Other
+local.env
