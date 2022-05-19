@@ -9,18 +9,147 @@
 
     <title>{% block title %}Головна{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/bootstrap-icons.min.css">
     {% block extrahead %}{% endblock %}
 </head>
 
 <body id="body" class="">
-<div class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
-    <div class="container">
-        {% block body %}
-        {% endblock %}
+<div class="container">
+    <div class="">
+
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">Une pétition</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarColor02" aria-controls="navbarColor02"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarColor02">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">Archive
+                                <span class="visually-hidden">(current)</span>
+                            </a>
+                        </li>
+                        {#                        <li class="nav-item">#}
+                        {#                            <a class="nav-link" href="#">Account</a>#}
+                        {#                        </li>#}
+                        {#                        <li class="nav-item">#}
+                        {#                            <a class="nav-link" href="#">Pricing</a>#}
+                        {#                        </li>#}
+                        {#                        <li class="nav-item">#}
+                        {#                            <a class="nav-link" href="#">About</a>#}
+                        {#                        </li>#}
+                        {#                        <li class="nav-item dropdown">#}
+                        {#                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#"#}
+                        {#                               role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>#}
+                        {#                            <div class="dropdown-menu">#}
+                        {#                                <a class="dropdown-item" href="#">Action</a>#}
+                        {#                                <a class="dropdown-item" href="#">Another action</a>#}
+                        {#                                <a class="dropdown-item" href="#">Something else here</a>#}
+                        {#                                <div class="dropdown-divider"></div>#}
+                        {#                                <a class="dropdown-item" href="#">Separated link</a>#}
+                        {#                            </div>#}
+                        {#                        </li>#}
+                    </ul>
+                    <ul class="navbar-nav">
+                        {% if request.user.is_authenticated %}
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                                   href="#"
+                                   role="button" aria-haspopup="true" aria-expanded="false">
+                                    {{ request.user.first_name }}
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="{% url 'account:logout' %}">Log
+                                        Out</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="#">Separated link</a>
+                                </div>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                                   href="#"
+                                   role="button" aria-haspopup="true" aria-expanded="false">
+                                    <i class="bi-bell"></i>
+                                </a>
+                                <div class="dropdown-menu p-4 text-muted" style="min-width: 350px">
+                                    {% for notification in request.user.notifications.all %}
+                                        {% if forloop.counter0 != 0 %}
+                                            <div class="dropdown-divider"></div>
+                                        {% endif %}
+                                        <div class=" {% if not notification.path %} disabled {% endif %}"
+                                           href="{{ notification.path|default:'#' }}">
+                                            <div>
+                                                <span class="">{{ notification.created_at }}</span>
+                                                <span class="dropdown-item-text fw-bold">{{ notification.title }}</span>
+                                            </div>
+                                            {% if notification.description %}
+                                            <span class="dropdown-item-text">{{ notification.description }}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+{#                                <div class="dropdown-menu dropdown-menu-lg-start p-4 text-muted"#}
+{#                                     style="max-width: 200px;">#}
+{#                                    {% for notification in request.user.notifications.all %}#}
+{#                                        {% if forloop.counter0 != 0 %}#}
+{#                                            <div class="dropdown-divider"></div>#}
+{#                                        {% endif %}#}
+{#                                        <div class="dropdown-item p-4" style="max-width: 200px;">#}
+{#                                        <p class="mb-0">{{ notification.description }}</p>#}
+{#                                        </div>#}
+{#                                        <div class="dropdown-item {% if not notification.path %} disabled {% endif %}"#}
+{#                                           href="{{ notification.path|default:'#' }}">#}
+{#                                            <div>#}
+{#                                                <span class="">{{ notification.created_at }}</span>#}
+{#                                                <span class=" fw-bold">{{ notification.title }}</span>#}
+{#                                            </div>#}
+{#                                            {% if notification.description %}#}
+{#                                            <span class="">{{ notification.description }}</span>#}
+{#                                            {% endif %}#}
+{#                                        </div>#}
+{#                                    {% endfor %}#}
+{#                                    <div class="dropdown-divider"></div>#}
+{#                                    <a class="dropdown-item disabled" href="#">History begins here</a>#}
+{##}
+{#                                </div>#}
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'account:login' %}">Log In</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'account:signup' %}">Sign Up</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    {#                    <form class="d-flex">#}
+                    {#                        <input class="form-control me-sm-2" type="text" placeholder="Search">#}
+                    {#                        <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>#}
+                    {#                    </form>#}
+                </div>
+            </div>
+        </nav>
+
+
     </div>
+</div>
+
+<div class="container mt-2">
+    {% block body %}
+    {% endblock %}
+    <p class="mt-5 mb-3 text-muted">&copy; iterlace, 2022</p>
 </div>
 </body>
 
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/bootstrap.bundle.min.js"></script>
 {% block js_footer %}{% endblock %}
 
 </html>

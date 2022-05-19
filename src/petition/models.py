@@ -100,13 +100,13 @@ class PetitionNews(models.Model):
         db_table = "petition_news"
 
 
-class PetitionNotification(models.Model):
-
-    petition = models.ForeignKey(
-        "petition.Petition",
+class Notification(models.Model):
+    user = models.ForeignKey(
+        "account.User",
         on_delete=models.CASCADE,
         null=False,
-        verbose_name="Petition",
+        verbose_name="User",
+        related_name="notifications",
     )
     title = models.TextField(
         verbose_name="Title",
@@ -135,3 +135,4 @@ class PetitionNotification(models.Model):
         verbose_name = "Petition News"
         verbose_name_plural = "Petition News"
         db_table = "petition_notifications"
+        ordering = ("-created_at",)

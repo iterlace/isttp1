@@ -9,9 +9,9 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path, re_path
 
 urlpatterns = [
-    path("", include(petition_urls, namespace="petition"), name="petition"),
     path("admin/", admin.site.urls),
     path("account/", include(account_urls, namespace="account"), name="account"),
+    re_path("^", include(petition_urls, namespace="petition"), name="petition"),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

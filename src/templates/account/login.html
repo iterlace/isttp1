@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block body %}
+    <form method="POST" action="{% url 'account:login' %}" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors %}
+            {% for error in form.non_field_errors %}
+                <div class="form-error">
+                    <div class="alert alert-primary">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                </div>
+            {% endfor %}
+
+        {% endif %}
+
+        <div>
+            <div>
+                {% for field in form %}
+                    <label class="form-label">{{ field.label }}:</label>
+                    <div class="input-group mb-3">
+                        {{ field|add_class:"form-control" }}
+                    </div>
+                    {% for error in field.errors %}
+                        <div class="field-error">
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+
+            <div class="input-group center sup mb-3">
+                <button class="btn btn-primary" type="submit">Sign in</button>
+            </div>
+        </div>
+
+    </form>
+{% endblock %}
