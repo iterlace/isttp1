@@ -2,7 +2,9 @@
 {% load widget_tweaks %}
 
 {% block body %}
-    <form method="POST" action="{% url 'account:login' %}" novalidate>
+    <h1 class="mt-2 mb-5">Don't be silent! Create a new petition!</h1>
+
+    <form method="POST" action="{% url 'petition:create' %}" novalidate>
         {% csrf_token %}
 
         {% if form.errors %}
@@ -13,18 +15,19 @@
                     </div>
                 </div>
             {% endfor %}
-
         {% endif %}
 
         <div>
             <div>
                 {% for field in form %}
                     <label class="form-label">{{ field.label }}:</label>
-                    {% if not field.errors %}
-                        {{ field|add_class:"form-control" }}
-                    {% else %}
-                        {{ field|add_class:"form-control is-invalid" }}
-                    {% endif %}
+                    <div class="input-group mb-3">
+                        {% if not field.errors %}
+                            {{ field|add_class:"form-control" }}
+                        {% else %}
+                            {{ field|add_class:"form-control is-invalid" }}
+                        {% endif %}
+                    </div>
                     {% for error in field.errors %}
                         <div class="field-error">
                             <div class="alert alert-primary">
@@ -37,7 +40,7 @@
 
 
             <div class="input-group center sup mb-3">
-                <button class="btn btn-primary" type="submit">Sign in</button>
+                <button class="btn btn-primary" type="submit">Publish!</button>
             </div>
         </div>
 

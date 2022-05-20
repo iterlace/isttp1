@@ -19,12 +19,14 @@
             <div>
                 {% for field in form %}
                     <label class="form-label">{{ field.label }}:</label>
-                    <div class="input-group mb-3">
+                    {% if not field.errors %}
                         {{ field|add_class:"form-control" }}
-                    </div>
+                    {% else %}
+                        {{ field|add_class:"form-control is-invalid" }}
+                    {% endif %}
                     {% for error in field.errors %}
                         <div class="field-error">
-                            <div class="alert alert-danger">
+                            <div class="alert alert-primary">
                                 <strong>{{ error|escape }}</strong>
                             </div>
                         </div>

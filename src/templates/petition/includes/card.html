@@ -1,0 +1,26 @@
+<div class="card text-white bg-dark ms-2 mb-2 p-0" style="max-width: 20rem;">
+    <div class="card-header">{{ petition.author.initials }}
+    </div>
+    <div class="card-body">
+        <h4 class="card-title">
+            <a
+                class="link-light text-decoration-none"
+                href="{% url 'petition:detail' petition.id %}"
+            >{{ petition.title }}</a>
+        </h4>
+        <p class="card-text">{{ petition.description|truncatechars:"250" }}</p>
+    </div>
+    <div class="card-footer">
+        <p class="text-muted mb-1">
+            {{ petition.signatories_count }} of {{ petition.signatories_goal }} signs collected
+        </p>
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-secondary"
+                 role="progressbar"
+                 aria-valuenow="{{ petition.signatories_count }}" aria-valuemin="0"
+                 aria-valuemax="{{ petition.signatories_goal }}"
+                 style="width: {{ petition.signatories_percentage }}%;"
+            ></div>
+        </div>
+    </div>
+</div>

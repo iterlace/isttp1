@@ -74,3 +74,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "user"
         verbose_name_plural = "users"
         db_table = "account_user"
+
+    @property
+    def full_name(self):
+        return "{} {}".format(self.first_name.title(), self.last_name.title())
+
+    @property
+    def initials(self):
+        return "{} {}.".format(self.last_name.title(), self.first_name[0].capitalize())

@@ -5,7 +5,7 @@ extend-ignore = ["E203", "E501"]
 
 [tool.isort]
 profile = "black"
-src_paths = ["core", "account", "petition"]
+known_firstparty = ["core", "account", "petition"]
 known_django = ["django", "rest_framework", "rest_framework_simplejwt", "dal", "corsheaders",
                 "dbsettings", "environ", "django_extensions", "django_filters", "prettyjson",
                 "drf_multiple_model", "rest_framework_swagger", "rest_framework_constant",

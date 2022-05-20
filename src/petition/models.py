@@ -1,3 +1,5 @@
+import math
+
 from django.db import models
 from django.utils import timezone
 
@@ -24,13 +26,28 @@ class Petition(models.Model):
         on_delete=models.PROTECT,
         verbose_name="Author",
         null=False,
+        related_name="owned_petitions",
     )
-    votes_cache = models.PositiveIntegerField(
+    signatories = models.ManyToManyField(
+        "account.User",
+        through="petition.Vote",
+        related_name="signed_petitions",
+    )
+    # Votes cached quantity
+    signatories_count = models.PositiveIntegerField(
         verbose_name="Votes",
         blank=True,
         null=False,
         default=0,
     )
+
+    @property
+    def signatories_goal(self):
+        return 2 ** (math.floor(math.sqrt(self.signatories_count + 1)) + 1)
+
+    @property
+    def signatories_percentage(self):
+        return math.floor(self.signatories_count / self.signatories_goal * 100)
 
     class Meta:
         verbose_name = "Petition"
@@ -44,13 +61,17 @@ class Vote(models.Model):
         on_delete=models.CASCADE,
         null=False,
         verbose_name="User",
+        related_name="votes",
     )
     petition = models.ForeignKey(
         "petition.Petition",
         on_delete=models.CASCADE,
         null=False,
         verbose_name="Petition",
+        related_name="votes",
     )
+
+    # TODO: remove?
     reason = models.TextField(
         verbose_name="Reason",
         max_length=400,
@@ -58,6 +79,7 @@ class Vote(models.Model):
         blank=True,
         default=None,
     )
+
     created_at = models.DateTimeField(
         verbose_name="Date created",
         default=timezone.now,

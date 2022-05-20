@@ -35,9 +35,6 @@
                             </a>
                         </li>
                         {#                        <li class="nav-item">#}
-                        {#                            <a class="nav-link" href="#">Account</a>#}
-                        {#                        </li>#}
-                        {#                        <li class="nav-item">#}
                         {#                            <a class="nav-link" href="#">Pricing</a>#}
                         {#                        </li>#}
                         {#                        <li class="nav-item">#}
@@ -58,6 +55,9 @@
                     <ul class="navbar-nav">
                         {% if request.user.is_authenticated %}
 
+                            <li class="nav-item me-3">
+                                <a class="nav-link" href="{% url 'petition:create' %}"><i class="bi-plus-circle"></i> New petition</a>
+                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
                                    href="#"
@@ -67,8 +67,8 @@
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="{% url 'account:logout' %}">Log
                                         Out</a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#">Separated link</a>
+{#                                    <div class="dropdown-divider"></div>#}
+{#                                    <a class="dropdown-item" href="#">Separated link</a>#}
                                 </div>
                             </li>
 
@@ -76,7 +76,7 @@
                                 <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
                                    href="#"
                                    role="button" aria-haspopup="true" aria-expanded="false">
-                                    <i class="bi-bell"></i>
+                                    <i class="bi-bell "></i>
                                 </a>
                                 <div class="dropdown-menu p-4 text-muted" style="min-width: 350px">
                                     {% for notification in request.user.notifications.all %}
@@ -84,41 +84,41 @@
                                             <div class="dropdown-divider"></div>
                                         {% endif %}
                                         <div class=" {% if not notification.path %} disabled {% endif %}"
-                                           href="{{ notification.path|default:'#' }}">
+                                             href="{{ notification.path|default:'#' }}">
                                             <div>
                                                 <span class="">{{ notification.created_at }}</span>
                                                 <span class="dropdown-item-text fw-bold">{{ notification.title }}</span>
                                             </div>
                                             {% if notification.description %}
-                                            <span class="dropdown-item-text">{{ notification.description }}</span>
+                                                <span class="dropdown-item-text">{{ notification.description }}</span>
                                             {% endif %}
                                         </div>
                                     {% endfor %}
                                 </div>
-{#                                <div class="dropdown-menu dropdown-menu-lg-start p-4 text-muted"#}
-{#                                     style="max-width: 200px;">#}
-{#                                    {% for notification in request.user.notifications.all %}#}
-{#                                        {% if forloop.counter0 != 0 %}#}
-{#                                            <div class="dropdown-divider"></div>#}
-{#                                        {% endif %}#}
-{#                                        <div class="dropdown-item p-4" style="max-width: 200px;">#}
-{#                                        <p class="mb-0">{{ notification.description }}</p>#}
-{#                                        </div>#}
-{#                                        <div class="dropdown-item {% if not notification.path %} disabled {% endif %}"#}
-{#                                           href="{{ notification.path|default:'#' }}">#}
-{#                                            <div>#}
-{#                                                <span class="">{{ notification.created_at }}</span>#}
-{#                                                <span class=" fw-bold">{{ notification.title }}</span>#}
-{#                                            </div>#}
-{#                                            {% if notification.description %}#}
-{#                                            <span class="">{{ notification.description }}</span>#}
-{#                                            {% endif %}#}
-{#                                        </div>#}
-{#                                    {% endfor %}#}
-{#                                    <div class="dropdown-divider"></div>#}
-{#                                    <a class="dropdown-item disabled" href="#">History begins here</a>#}
-{##}
-{#                                </div>#}
+                                {#                                <div class="dropdown-menu dropdown-menu-lg-start p-4 text-muted"#}
+                                {#                                     style="max-width: 200px;">#}
+                                {#                                    {% for notification in request.user.notifications.all %}#}
+                                {#                                        {% if forloop.counter0 != 0 %}#}
+                                {#                                            <div class="dropdown-divider"></div>#}
+                                {#                                        {% endif %}#}
+                                {#                                        <div class="dropdown-item p-4" style="max-width: 200px;">#}
+                                {#                                        <p class="mb-0">{{ notification.description }}</p>#}
+                                {#                                        </div>#}
+                                {#                                        <div class="dropdown-item {% if not notification.path %} disabled {% endif %}"#}
+                                {#                                           href="{{ notification.path|default:'#' }}">#}
+                                {#                                            <div>#}
+                                {#                                                <span class="">{{ notification.created_at }}</span>#}
+                                {#                                                <span class=" fw-bold">{{ notification.title }}</span>#}
+                                {#                                            </div>#}
+                                {#                                            {% if notification.description %}#}
+                                {#                                            <span class="">{{ notification.description }}</span>#}
+                                {#                                            {% endif %}#}
+                                {#                                        </div>#}
+                                {#                                    {% endfor %}#}
+                                {#                                    <div class="dropdown-divider"></div>#}
+                                {#                                    <a class="dropdown-item disabled" href="#">History begins here</a>#}
+                                {##}
+                                {#                                </div>#}
                             </li>
                         {% else %}
                             <li class="nav-item">
@@ -141,7 +141,7 @@
     </div>
 </div>
 
-<div class="container mt-2">
+<div class="container mt-5">
     {% block body %}
     {% endblock %}
     <p class="mt-5 mb-3 text-muted">&copy; iterlace, 2022</p>
