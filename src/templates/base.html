@@ -87,11 +87,19 @@
                                         {% if forloop.counter0 != 0 %}
                                             <div class="dropdown-divider"></div>
                                         {% endif %}
-                                        <div class=" {% if not notification.path %} disabled {% endif %}"
-                                             href="{{ notification.path|default:'#' }}">
+                                        <div class=" {% if not notification.path %} disabled {% endif %}">
                                             <div>
                                                 <span class="">{{ notification.created_at }}</span>
-                                                <span class="dropdown-item-text fw-bold">{{ notification.title }}</span>
+                                                {% if notification.path %}
+                                                <a class="dropdown-item-text fw-bold"
+                                                   href="{{ notification.path|default:'#' }}">
+                                                    {{ notification.title }}
+                                                </a>
+                                                {% else %}
+                                                <span class="dropdown-item-text fw-bold">
+                                                    {{ notification.title }}
+                                                </span>
+                                                {% endif %}
                                             </div>
                                             {% if notification.description %}
                                                 <span class="dropdown-item-text">{{ notification.description }}</span>

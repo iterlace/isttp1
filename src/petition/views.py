@@ -7,19 +7,24 @@ from xlsxwriter.worksheet import Worksheet
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LogoutView as _LogoutView
-from django.http import FileResponse, HttpResponse, HttpResponseRedirect
+from django.http import (
+    FileResponse,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+)
 from django.shortcuts import redirect, render, resolve_url
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import generic
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, DeleteView
 
 from account.models import User
 from petition.models import Petition, PetitionNews, Vote
 
-from .forms import PetitionCreateForm
+from .forms import PetitionCreateForm, PetitionNewsCreateForm
 
 
 class Home(TemplateView):
@@ -167,12 +172,16 @@ class PetitionDetail(DetailView):
     def get_latest_votes(self):
         return self.object.votes.order_by("-created_at")
 
+    def get_news(self):
+        return self.object.news.order_by("-created_at")
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
 
         ctx["is_owner"] = self.get_is_owner()
         ctx["already_signed"] = self.get_already_signed()
         ctx["latest_votes"] = self.get_latest_votes()
+        ctx["news"] = self.get_news()
         return ctx
 
 
@@ -187,3 +196,73 @@ class PetitionVote(LoginRequiredMixin, DetailView):
             petition_id=petition.pk, user_id=user.pk, defaults={}
         )
         return redirect("petition:detail", id=petition.pk)
+
+
+class PetitionNewsCreate(LoginRequiredMixin, CreateView):
+    model = PetitionNews
+    form_class = PetitionNewsCreateForm
+    template_name = "petition_news/create.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.petition = Petition.objects.filter(
+            pk=self.kwargs["petition_id"],
+            author_id=self.request.user.pk,
+        ).first()
+        if self.petition is None:
+            return HttpResponseForbidden()
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["petition"] = self.petition
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        return reverse("petition:detail", kwargs={"id": self.object.petition.pk})
+
+    def form_valid(self, form):
+        form.instance.petition_id = self.petition.pk
+        self.object = form.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class PetitionNewsDelete(LoginRequiredMixin, DeleteView):
+    model = PetitionNews
+    pk_url_kwarg = "id"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.petition = Petition.objects.filter(
+            news__id=self.kwargs["id"],
+            author_id=self.request.user.pk,
+        ).first()
+        if self.petition is None:
+            return HttpResponseForbidden()
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse("petition:detail", kwargs={"id": self.petition.pk})
+
+    def get(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        success_url = self.get_success_url()
+        self.object.delete()
+        return HttpResponseRedirect(success_url)
+
+    def form_valid(self, form):
+        form.instance.author_id = self.request.user.pk
+        self.object = form.save()
+        return HttpResponseRedirect(self.get_success_url())

@@ -101,6 +101,7 @@ class PetitionNews(models.Model):
         on_delete=models.CASCADE,
         null=False,
         verbose_name="Petition",
+        related_name="news",
     )
     title = models.TextField(
         verbose_name="Title",
@@ -123,6 +124,7 @@ class PetitionNews(models.Model):
         verbose_name = "Petition News"
         verbose_name_plural = "Petition News"
         db_table = "petition_news"
+        ordering = ("-created_at",)
 
 
 class Notification(models.Model):

@@ -7,7 +7,48 @@
 
         <div class="row mt-5">
             <div class="col-8 pe-2">
-                {{ object.description }}
+                <div>
+                    {{ object.description }}
+                </div>
+                {% if news or is_owner %}
+                    <div class="mt-5">
+                        <h2 class="mb-3">Updates
+                            {% if is_owner %}
+                                <a class="btn btn-lg btn-dark mb-1"
+                                   type="button" role="button"
+                                   href="{% url 'petition:news_create' object.id %}"
+                                >Add news
+                                </a>
+                            {% endif %}
+                        </h2>
+                        <div class="row">
+                            {% for n in news %}
+                                <div class="card text-white bg-dark ms-2 mb-2 p-0"
+                                     style="max-width: 20rem;">
+                                    <div class="card-header">
+                                        <span class="text-muted me-0">
+                                            {{ n.created_at|date }}
+                                        </span>
+                                        {% if is_owner %}
+                                            <a class="btn btn-sm btn-primary me-0"
+                                               type="button" role="button"
+                                               style="height: 1.6rem; padding-top: 0; margin-top: -5px;"
+                                               href="{% url 'petition:news_delete' n.id %}"
+                                            >Delete
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-body">
+                                        <h4 class="card-title">
+                                            {{ n.title }}
+                                        </h4>
+                                        <p class="card-text">{{ n.description }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
             <div class="col-4 ps-5">
                 <p class="mb-1">
