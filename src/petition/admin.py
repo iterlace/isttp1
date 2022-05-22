@@ -4,7 +4,7 @@ from django.contrib import admin
 from petition.models import Petition, PetitionNews
 
 
-class UserForm(forms.ModelForm):
+class PetitionForm(forms.ModelForm):
     class Meta:
         model = Petition
         fields = "__all__"
@@ -13,7 +13,7 @@ class UserForm(forms.ModelForm):
 
 class PetitionAdmin(admin.ModelAdmin):
     model = Petition
-    form = UserForm
+    form = PetitionForm
     fields = (
         "title",
         "created_at",
