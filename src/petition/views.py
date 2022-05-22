@@ -1,9 +1,13 @@
+import io
 from typing import List
+
+import xlsxwriter
+from xlsxwriter.worksheet import Worksheet
 
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LogoutView as _LogoutView
-from django.http import HttpResponseRedirect
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render, resolve_url
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -48,6 +52,62 @@ class Home(TemplateView):
         ctx["trending_petitions"] = self.get_trending_petitions()
         ctx["owned_petitions"] = self.get_owned_petitions()
         return ctx
+
+
+class Archive(TemplateView):
+    template_name = "petition/archive.html"
+
+    def get_petitions(self) -> List[Petition]:
+        petitions = Petition.objects.all().order_by("-created_at")
+        return list(petitions)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx["petitions"] = self.get_petitions()
+        return ctx
+
+
+class ArchiveExport(View):
+    def get_file(self) -> bytes:
+        buffer = io.BytesIO()
+        workbook = xlsxwriter.Workbook(buffer)
+        petitions_ws = workbook.add_worksheet(name="Petitions List")
+        petitions_ws.write("B2", "Title")
+        petitions_ws.write("C2", "Description")
+        petitions_ws.write("D2", "Created At")
+        petitions_ws.write("E2", "Author")
+        petitions_ws.write("F2", "Signatories")
+
+        petitions = Petition.objects.all().order_by("-created_at")
+        for idx, petition in enumerate(petitions, start=3):
+            petitions_ws.write(f"B{idx}", petition.title)
+            petitions_ws.write(f"C{idx}", petition.description)
+            petitions_ws.write(f"D{idx}", petition.created_at.strftime("%d.%m.%Y"))
+            petitions_ws.write(f"E{idx}", petition.author.full_name)
+            petitions_ws.write(f"F{idx}", str(petition.signatories_count))
+
+            signatories_ws = workbook.add_worksheet(name=petition.title[:31])
+            signatories_ws.write("B2", "Full name")
+            signatories_ws.write("C2", "Sign date")
+
+            votes = petition.votes.select_related("user").order_by("-created_at")
+            for idx, vote in enumerate(votes, start=3):
+                signatories_ws.write(f"B{idx}", vote.user.full_name)
+                signatories_ws.write(f"C{idx}", petition.description)
+        workbook.close()
+
+        buffer.seek(0)
+        return buffer.read()
+
+    def get(self, request, **kwargs):
+        file = self.get_file()
+        response = HttpResponse(
+            file,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = "attachment; filename=archive.xlsx"
+        return response
 
 
 class PetitionCreate(LoginRequiredMixin, CreateView):
