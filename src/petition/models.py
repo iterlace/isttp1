@@ -41,6 +41,9 @@ class Petition(models.Model):
         default=0,
     )
 
+    def __str__(self):
+        return self.title
+
     @property
     def signatories_goal(self):
         return 2 ** (math.floor(math.sqrt(self.signatories_count + 1)) + 1)

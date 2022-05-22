@@ -56,7 +56,8 @@
                         {% if request.user.is_authenticated %}
 
                             <li class="nav-item me-3">
-                                <a class="nav-link" href="{% url 'petition:create' %}"><i class="bi-plus-circle"></i> New petition</a>
+                                <a class="nav-link" href="{% url 'petition:create' %}"><i
+                                        class="bi-plus-circle"></i> New petition</a>
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
@@ -65,10 +66,13 @@
                                     {{ request.user.first_name }}
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="{% url 'account:logout' %}">Log
-                                        Out</a>
-{#                                    <div class="dropdown-divider"></div>#}
-{#                                    <a class="dropdown-item" href="#">Separated link</a>#}
+                                    {% if request.user.is_staff %}
+                                        <a class="dropdown-item" href="{% url 'admin:index' %}">Admin panel</a>
+                                        <div class="dropdown-divider"></div>
+                                    {% endif %}
+                                    <a class="dropdown-item"
+                                       href="{% url 'account:logout' %}"
+                                    >Log Out</a>
                                 </div>
                             </li>
 
