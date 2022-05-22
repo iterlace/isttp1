@@ -73,13 +73,24 @@ class ArchiveExport(View):
         buffer = io.BytesIO()
         workbook = xlsxwriter.Workbook(buffer)
         petitions_ws = workbook.add_worksheet(name="Petitions List")
-        petitions_ws.write("B2", "Title")
-        petitions_ws.write("C2", "Description")
-        petitions_ws.write("D2", "Created At")
-        petitions_ws.write("E2", "Author")
-        petitions_ws.write("F2", "Signatories")
 
         petitions = Petition.objects.all().order_by("-created_at")
+
+        petitions_ws.add_table(
+            f"B2:F{2+len(petitions)}",
+            {
+                "columns": [
+                    {"header": "Title"},
+                    {"header": "Description"},
+                    {"header": "Created At"},
+                    {"header": "Author"},
+                    {"header": "Signatories"},
+                ]
+            },
+        )
+        petitions_ws.set_column("B:C", 40)  # set width
+        petitions_ws.set_column("D:F", 20)  # set width
+
         for idx, petition in enumerate(petitions, start=3):
             petitions_ws.write(f"B{idx}", petition.title)
             petitions_ws.write(f"C{idx}", petition.description)
@@ -88,13 +99,23 @@ class ArchiveExport(View):
             petitions_ws.write(f"F{idx}", str(petition.signatories_count))
 
             signatories_ws = workbook.add_worksheet(name=petition.title[:31])
-            signatories_ws.write("B2", "Full name")
-            signatories_ws.write("C2", "Sign date")
 
             votes = petition.votes.select_related("user").order_by("-created_at")
+            signatories_ws.add_table(
+                f"B2:C{2+len(votes)}",
+                {
+                    "columns": [
+                        {"header": "Full name"},
+                        {"header": "Sign date"},
+                    ]
+                },
+            )
+            signatories_ws.set_column("B:B", 30)  # set width
+            signatories_ws.set_column("C:C", 15)  # set width
+
             for idx, vote in enumerate(votes, start=3):
                 signatories_ws.write(f"B{idx}", vote.user.full_name)
-                signatories_ws.write(f"C{idx}", petition.description)
+                signatories_ws.write(f"C{idx}", vote.created_at.strftime("%d.%m.%Y"))
         workbook.close()
 
         buffer.seek(0)
