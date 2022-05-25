@@ -2,11 +2,9 @@ import io
 from typing import List
 
 import xlsxwriter
-from xlsxwriter.worksheet import Worksheet
+from pygooglechart import PieChart2D
 
-from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LogoutView as _LogoutView
 from django.http import (
     FileResponse,
     HttpResponse,
@@ -133,6 +131,33 @@ class ArchiveExport(View):
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
         response["Content-Disposition"] = "attachment; filename=archive.xlsx"
+        return response
+
+
+class ArchiveChartExport(View):
+    def get_file(self) -> bytes:
+        petitions = (
+            Petition.objects.filter(
+                created_at__gte=timezone.now() - timezone.timedelta(days=14)
+            )
+            .order_by("-signatories_count")
+            .values("signatories_count", "title")[:5]
+        )
+
+        chart = PieChart2D(700, 400)
+        chart.add_data([i["signatories_count"] for i in petitions])
+        chart.set_pie_labels([i["title"] for i in petitions])
+
+        buffer = chart.download()
+        return buffer
+
+    def get(self, request, **kwargs):
+        file = self.get_file()
+        response = HttpResponse(
+            file,
+            content_type="image/png",
+        )
+        response["Content-Disposition"] = "attachment; filename=chart.png"
         return response
 
 

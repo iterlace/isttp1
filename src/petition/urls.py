@@ -10,6 +10,11 @@ urlpatterns = [
     path(
         "petition/archive/export/", views.ArchiveExport.as_view(), name="export_archive"
     ),
+    path(
+        "petition/archive/chart/",
+        views.ArchiveChartExport.as_view(),
+        name="export_archive_chart",
+    ),
     # Petition
     path("petition/create/", views.PetitionCreate.as_view(), name="create"),
     path("petition/<int:id>/", views.PetitionDetail.as_view(), name="detail"),
