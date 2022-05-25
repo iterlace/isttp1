@@ -136,17 +136,21 @@ class ArchiveExport(View):
 
 class ArchiveChartExport(View):
     def get_file(self) -> bytes:
+        colours = ["3374cd", "992220", "469b57", "e4e144", "cd3333", "749920"]
+        since = timezone.now() - timezone.timedelta(days=14)
         petitions = (
-            Petition.objects.filter(
-                created_at__gte=timezone.now() - timezone.timedelta(days=14)
-            )
+            Petition.objects.filter(created_at__gte=since)
             .order_by("-signatories_count")
             .values("signatories_count", "title")[:5]
         )
 
-        chart = PieChart2D(700, 400)
+        chart = PieChart2D(750, 400)
+        chart.title = "Most voted petitions (created since {})".format(
+            since.strftime("%d.%m.%Y")
+        )
         chart.add_data([i["signatories_count"] for i in petitions])
         chart.set_pie_labels([i["title"] for i in petitions])
+        chart.set_colours(colours[: len(petitions)])
 
         buffer = chart.download()
         return buffer
