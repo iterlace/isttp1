@@ -2,7 +2,8 @@
 {% load widget_tweaks %}
 
 {% block body %}
-    <form method="POST" action="{% url 'account:login' %}" novalidate>
+    <h1>Log in now!</h1>
+    <form method="POST" action="{% url 'account:login' %}" novalidate class="mt-5">
         {% csrf_token %}
 
         {% if form.errors %}

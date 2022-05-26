@@ -2,7 +2,8 @@
 {% load widget_tweaks %}
 
 {% block body %}
-    <form method="POST" action="{% url 'account:signup' %}" novalidate>
+    <h1>Sign up now!</h1>
+    <form method="POST" action="{% url 'account:signup' %}" novalidate class="mt-5">
         {% csrf_token %}
 
         {% if form.errors %}
@@ -35,7 +36,7 @@
             </div>
 
 
-            <div class="input-group center sup mb-3">
+            <div class="input-group center sup mb-3 mt-4">
                 <button class="btn btn-primary" type="submit">Sign up!</button>
             </div>
         </div>
