@@ -57,6 +57,38 @@ class Home(TemplateView):
         return ctx
 
 
+class Search(TemplateView):
+    template_name = "petition/search.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.query = self.request.GET.get("q", "").strip()
+        if not self.query:
+            return HttpResponseRedirect(reverse("petition:archive"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_petitions_by_title(self) -> List[Petition]:
+        title_matched = Petition.objects.filter(title__icontains=self.query).order_by(
+            "-created_at"
+        )
+        return list(title_matched)
+
+    def get_petitions_by_description(self) -> List[Petition]:
+        description_matched = (
+            Petition.objects.filter(description__icontains=self.query)
+            .exclude(title__icontains=self.query)
+            .order_by("-created_at")
+        )
+        return list(description_matched)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx["search_query"] = self.query
+        ctx["petitions_by_title"] = self.get_petitions_by_title()
+        ctx["petitions_by_description"] = self.get_petitions_by_description()
+        return ctx
+
+
 class Archive(TemplateView):
     template_name = "petition/archive.html"
 

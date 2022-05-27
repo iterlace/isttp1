@@ -34,6 +34,12 @@
                                 <span class="visually-hidden">(current)</span>
                             </a>
                         </li>
+                        {% if request.user.is_authenticated %}
+                            <li class="nav-item me-3">
+                                <a class="nav-link" href="{% url 'petition:create' %}"><i
+                                        class="bi-plus-circle"></i> New petition</a>
+                            </li>
+                        {% endif %}
                         {#                        <li class="nav-item">#}
                         {#                            <a class="nav-link" href="#">Pricing</a>#}
                         {#                        </li>#}
@@ -52,13 +58,16 @@
                         {#                            </div>#}
                         {#                        </li>#}
                     </ul>
+
+                    <form class="d-flex ms-0 me-3" action="{% url 'petition:search' %}">
+                        <div class="input-group input-group-sm">
+                            <input class="form-control" type="text" name="q" placeholder="Search">
+                            <button class="btn btn-dark" type="submit">Search</button>
+                        </div>
+                    </form>
                     <ul class="navbar-nav">
                         {% if request.user.is_authenticated %}
 
-                            <li class="nav-item me-3">
-                                <a class="nav-link" href="{% url 'petition:create' %}"><i
-                                        class="bi-plus-circle"></i> New petition</a>
-                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
                                    href="#"
@@ -67,7 +76,8 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     {% if request.user.is_staff %}
-                                        <a class="dropdown-item" href="{% url 'admin:index' %}">Admin panel</a>
+                                        <a class="dropdown-item" href="{% url 'admin:index' %}">Admin
+                                            panel</a>
                                         <div class="dropdown-divider"></div>
                                     {% endif %}
                                     <a class="dropdown-item"
@@ -91,12 +101,12 @@
                                             <div>
                                                 <span class="">{{ notification.created_at }}</span>
                                                 {% if notification.path %}
-                                                <a class="dropdown-item-text fw-bold"
-                                                   href="{{ notification.path|default:'#' }}">
-                                                    {{ notification.title }}
-                                                </a>
+                                                    <a class="dropdown-item-text fw-bold"
+                                                       href="{{ notification.path|default:'#' }}">
+                                                        {{ notification.title }}
+                                                    </a>
                                                 {% else %}
-                                                <span class="dropdown-item-text fw-bold">
+                                                    <span class="dropdown-item-text fw-bold">
                                                     {{ notification.title }}
                                                 </span>
                                                 {% endif %}

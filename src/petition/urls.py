@@ -15,6 +15,8 @@ urlpatterns = [
         views.ArchiveChartExport.as_view(),
         name="export_archive_chart",
     ),
+    # Search
+    path("search/", views.Search.as_view(), name="search"),
     # Petition
     path("petition/create/", views.PetitionCreate.as_view(), name="create"),
     path("petition/<int:id>/", views.PetitionDetail.as_view(), name="detail"),
