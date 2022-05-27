@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import Petition, PetitionNews
 
@@ -35,3 +36,20 @@ class PetitionNewsCreateForm(forms.ModelForm):
             "title",
             "description",
         )
+
+
+class ArchiveImportForm(forms.Form):
+    file = forms.FileField(help_text="Select a file")
+
+    def clean_file(self):
+        file = self.cleaned_data["file"]
+        if (
+            file.content_type
+            != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ):
+            raise ValidationError("The uploaded file doesn't match an Excel format.")
+
+        return file
+
+    class Meta:
+        fields = ("file",)

@@ -17,12 +17,9 @@ def increase_signatories_count(sender, instance: Vote, created: bool = False, **
 
 
 @receiver(post_delete, sender=Vote)
-def increase_signatories_count(sender, instance: Vote, created: bool = False, **kwargs):
-    if not created:
-        return
-
+def decrease_signatories_count(sender, instance: Vote, **kwargs):
     petition = instance.petition
-    petition.signatories_count = max(1, petition.signatories_count - 1)
+    petition.signatories_count = max(0, petition.signatories_count - 1)
     petition.save(update_fields=("signatories_count",))
 
 

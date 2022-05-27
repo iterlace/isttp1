@@ -6,6 +6,12 @@
            href="{% url 'petition:export_archive' %}"
         >Download .xlsx
         </a>
+        {% if request.user.is_superuser %}
+            <a class="btn btn-lg btn-primary" type="button" role="button"
+               href="{% url 'petition:import_archive' %}"
+            >Import .xlsx
+            </a>
+        {% endif %}
         <a class="btn btn-lg btn-dark" type="button" role="button"
            href="{% url 'petition:export_archive_chart_1' %}"
         >Download 2 weeks chart

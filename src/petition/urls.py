@@ -11,6 +11,9 @@ urlpatterns = [
         "petition/archive/export/", views.ArchiveExport.as_view(), name="export_archive"
     ),
     path(
+        "petition/archive/import/", views.ArchiveImport.as_view(), name="import_archive"
+    ),
+    path(
         "petition/archive/chart1/",
         views.ArchiveChart1Export.as_view(),
         name="export_archive_chart_1",

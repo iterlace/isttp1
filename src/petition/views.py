@@ -1,10 +1,13 @@
 import io
-from typing import List
+from typing import Any, Dict, List, Optional
 
+import openpyxl
 import xlsxwriter
 from pygooglechart import PieChart2D
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Count, F, Q, Subquery, Sum
 from django.http import (
     FileResponse,
@@ -18,12 +21,14 @@ from django.utils import timezone
 from django.views import generic
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, FormView
 
 from account.models import User
 from petition.models import Petition, PetitionNews, Vote
 
-from .forms import PetitionCreateForm, PetitionNewsCreateForm
+from .forms import ArchiveImportForm, PetitionCreateForm, PetitionNewsCreateForm
+
+MAX_WORKSHEET_TITLE = 31
 
 
 class Home(TemplateView):
@@ -134,7 +139,9 @@ class ArchiveExport(View):
             petitions_ws.write(f"E{idx}", petition.author.full_name)
             petitions_ws.write(f"F{idx}", str(petition.signatories_count))
 
-            signatories_ws = workbook.add_worksheet(name=petition.title[:31])
+            signatories_ws = workbook.add_worksheet(
+                name=petition.title[:MAX_WORKSHEET_TITLE]
+            )
 
             votes = petition.votes.select_related("user").order_by("-created_at")
             signatories_ws.add_table(
@@ -165,6 +172,104 @@ class ArchiveExport(View):
         )
         response["Content-Disposition"] = "attachment; filename=archive.xlsx"
         return response
+
+
+class ArchiveImport(FormView):
+    form_class = ArchiveImportForm
+    template_name = "petition/import.html"
+    success_url = reverse_lazy("petition:archive")
+
+    @staticmethod
+    def get_user(full_name: str) -> Optional[User]:
+        first_name, last_name = full_name.split(" ")
+        user = User.objects.filter(first_name=first_name, last_name=last_name).first()
+        return user
+
+    @staticmethod
+    def extract_petitions(workbook: openpyxl.workbook.Workbook) -> List[Dict[str, Any]]:
+        petitions: List[Dict[str, Any]] = []
+        for sheet in workbook.worksheets:
+            if sheet.title == "Petitions List":
+                for row in sheet.iter_rows(min_row=sheet.min_row + 1):
+                    values = [i.value for i in row[1:]]
+                    if None in values:
+                        continue
+                    title, description, created_at, author, signatories = values
+                    petitions.append(
+                        {
+                            "title": title.replace("_x000D_", "\n"),
+                            "description": description.replace("_x000D_", "\n"),
+                            "created_at": timezone.datetime.strptime(
+                                created_at, "%d.%m.%Y"
+                            ),
+                            "author": author.replace("_x000D_", "\n"),
+                            "signatories": signatories,
+                        }
+                    )
+                return petitions
+        else:
+            raise ValidationError('"Petitions List" sheet not found!')
+
+    @staticmethod
+    def extract_petition_signatories(sheet) -> List[Dict[str, Any]]:
+        signatories = []
+        for row in sheet.iter_rows(min_row=sheet.min_row + 1):
+            values = [i.value for i in row[1:]]
+            if None in values:
+                continue
+            full_name, created_at = values
+            signatories.append(
+                {
+                    "full_name": full_name.replace("_x000D_", "\n"),
+                    "created_at": timezone.datetime.strptime(created_at, "%d.%m.%Y"),
+                }
+            )
+        return signatories
+
+    def form_valid(self, form):
+        file = form.cleaned_data["file"]
+        workbook = openpyxl.load_workbook(file)
+        with transaction.atomic():
+            for petition_raw in self.extract_petitions(workbook):
+                petition = Petition.objects.filter(title=petition_raw["title"]).first()
+                if petition is None:
+                    user = self.get_user(petition_raw["author"])
+                    if user is None:
+                        continue
+                    petition = Petition.objects.create(
+                        title=petition_raw["title"],
+                        description=petition_raw["description"],
+                        author_id=user.pk,
+                    )
+                elif petition.description != petition_raw["description"]:
+                    # Edit a petition description if is has changed
+                    petition.description = petition_raw["description"]
+                    petition.save(update_fields=("description",))
+
+                # Get a corresponding sheet with signatories
+                try:
+                    sheet_idx = workbook.sheetnames.index(
+                        petition_raw["title"][:MAX_WORKSHEET_TITLE]
+                    )
+                except ValueError:
+                    continue
+
+                sheet = workbook.worksheets[sheet_idx]
+                signatories = self.extract_petition_signatories(sheet)
+
+                # Override all existing votes
+                petition.votes.all().delete()
+                for signatory in signatories:
+                    user = self.get_user(signatory["full_name"])
+                    if user is None:
+                        continue
+
+                    Vote.objects.create(
+                        user_id=user.pk,
+                        petition_id=petition.pk,
+                        created_at=signatory["created_at"],
+                    )
+        return HttpResponseRedirect(self.success_url)
 
 
 class ArchiveChart1Export(View):
