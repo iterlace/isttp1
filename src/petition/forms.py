@@ -4,9 +4,10 @@ from .models import Petition, PetitionNews
 
 
 class PetitionCreateForm(forms.ModelForm):
-    title = forms.CharField(max_length=200, help_text="Petition title")
+    title = forms.CharField(min_length=50, max_length=200, help_text="Petition title")
     description = forms.CharField(
         max_length=2400,
+        min_length=50,
         widget=forms.Textarea(),
         help_text="Describe the petition",
     )
@@ -20,9 +21,10 @@ class PetitionCreateForm(forms.ModelForm):
 
 
 class PetitionNewsCreateForm(forms.ModelForm):
-    title = forms.CharField(max_length=200, help_text="News title")
+    title = forms.CharField(min_length=10, max_length=200, help_text="News title")
     description = forms.CharField(
-        max_length=2400,
+        min_length=30,
+        max_length=1000,
         widget=forms.Textarea(),
         help_text="Details",
     )
