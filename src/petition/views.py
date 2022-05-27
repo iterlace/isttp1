@@ -5,6 +5,7 @@ import xlsxwriter
 from pygooglechart import PieChart2D
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, F, Q, Subquery, Sum
 from django.http import (
     FileResponse,
     HttpResponse,
@@ -166,12 +167,13 @@ class ArchiveExport(View):
         return response
 
 
-class ArchiveChartExport(View):
+class ArchiveChart1Export(View):
     def get_file(self) -> bytes:
         colours = ["3374cd", "992220", "469b57", "e4e144", "cd3333", "749920"]
         since = timezone.now() - timezone.timedelta(days=14)
         petitions = (
             Petition.objects.filter(created_at__gte=since)
+            .filter(signatories_count__gte=1)
             .order_by("-signatories_count")
             .values("signatories_count", "title")[:5]
         )
@@ -181,7 +183,49 @@ class ArchiveChartExport(View):
             since.strftime("%d.%m.%Y")
         )
         chart.add_data([i["signatories_count"] for i in petitions])
-        chart.set_pie_labels([i["title"] for i in petitions])
+        chart.set_pie_labels(
+            ["{} votes".format(i["signatories_count"]) for i in petitions]
+        )
+        chart.set_legend([i["title"] for i in petitions])
+        chart.set_colours(colours[: len(petitions)])
+
+        buffer = chart.download()
+        return buffer
+
+    def get(self, request, **kwargs):
+        file = self.get_file()
+        response = HttpResponse(
+            file,
+            content_type="image/png",
+        )
+        response["Content-Disposition"] = "attachment; filename=chart.png"
+        return response
+
+
+class ArchiveChart2Export(View):
+    def get_file(self) -> bytes:
+        colours = ["3374cd", "992220", "469b57", "e4e144", "cd3333", "749920"]
+        since = timezone.now() - timezone.timedelta(days=14)
+
+        petitions = (
+            User.objects.all()
+            .annotate(petitions_count=Count(F("owned_petitions")))
+            .filter(petitions_count__gte=1)
+            .order_by("-petitions_count")
+            .values("first_name", "last_name", "petitions_count")[:5]
+        )
+
+        chart = PieChart2D(750, 400)
+        chart.title = "Top authors by a number of petitions".format(
+            since.strftime("%d.%m.%Y")
+        )
+        chart.add_data([i["petitions_count"] for i in petitions])
+        chart.set_pie_labels(
+            ["{} petitions".format(i["petitions_count"]) for i in petitions]
+        )
+        chart.set_legend(
+            ["{} {}".format(i["first_name"], i["last_name"]) for i in petitions]
+        )
         chart.set_colours(colours[: len(petitions)])
 
         buffer = chart.download()
