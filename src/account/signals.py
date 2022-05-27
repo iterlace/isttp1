@@ -1,10 +1,17 @@
-from petition.models import Notification
-
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.core.exceptions import PermissionDenied
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
+from petition.models import Notification
+
 from .models import User
+
+
+@receiver(pre_delete, sender=User)
+def prohibit_superuser_deletion(sender, instance: User, **kwargs):
+    if instance.is_superuser:
+        raise PermissionDenied
 
 
 @receiver(post_save, sender=User)
