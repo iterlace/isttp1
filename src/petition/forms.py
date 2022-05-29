@@ -5,7 +5,7 @@ from .models import Petition, PetitionNews
 
 
 class PetitionCreateForm(forms.ModelForm):
-    title = forms.CharField(min_length=50, max_length=200, help_text="Petition title")
+    title = forms.CharField(min_length=10, max_length=200, help_text="Petition title")
     description = forms.CharField(
         max_length=2400,
         min_length=50,
