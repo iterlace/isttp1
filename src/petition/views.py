@@ -205,6 +205,12 @@ WHERE array(SELECT v.petition_id FROM petition_vote v WHERE v.user_id = u.id) @>
 class Statistics4(TemplateView):
     template_name = "account/list.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        self.petitions_count = int(self.request.GET.get("petitions_count", "").strip())
+        if not self.petitions_count:
+            return HttpResponseRedirect(reverse("petition:statistics"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_users(self) -> List[Petition]:
         if not self.request.user.is_authenticated:
             return []
@@ -212,7 +218,7 @@ class Statistics4(TemplateView):
         if self.request.user.owned_petitions.count() == 0:
             return []
 
-        since = timezone.now() - timezone.timedelta(days=14)
+        since = timezone.now() - timezone.timedelta(days=self.petitions_count)
 
         # Query #2.3
         users = User.objects.raw(

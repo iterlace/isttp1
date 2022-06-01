@@ -35,7 +35,9 @@
         </form>
 
         <form class="" action="{% url 'petition:statistics_4' %}">
-            <p>2.3  Show users who have created more petitions in 2 weeks than I have.
+            <p>2.3  Show users who have created more petitions in
+                <input style="width: 50px;" type="number" name="petitions_count" placeholder="0">
+                days than I have.
                 <button class="btn btn-dark" type="submit">Search</button>
             </p>
         </form>
