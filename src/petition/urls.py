@@ -45,6 +45,7 @@ urlpatterns = [
         views.PetitionNewsDelete.as_view(),
         name="news_delete",
     ),
+    re_path(r"statistics/0/", views.Statistics0.as_view(), name="statistics_0"),
     re_path(r"statistics/1/", views.Statistics1.as_view(), name="statistics_1"),
     re_path(r"statistics/2/", views.Statistics2.as_view(), name="statistics_2"),
     re_path(r"statistics/3/", views.Statistics3.as_view(), name="statistics_3"),

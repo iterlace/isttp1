@@ -71,6 +71,42 @@ class Statistics(TemplateView):
     template_name = "statistics.html"
 
 
+class Statistics0(TemplateView):
+    template_name = "petition/list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.days = int(self.request.GET.get("days", "").strip())
+        if not self.days:
+            return HttpResponseRedirect(reverse("petition:statistics"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_petitions(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+
+        # Query #1.3
+        petitions = Petition.objects.annotate(
+            news_count=Subquery(
+                PetitionNews.objects.filter(
+                    created_at__gte=timezone.now() - timezone.timedelta(days=self.days),
+                    petition_id=OuterRef("pk"),
+                )
+                .annotate(cnt=Count("id"))
+                .values("cnt")[:1]
+            )
+        ).filter(news_count__gte=1)
+        print("1.3: ", petitions.query)
+        return list(petitions)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_title"] = "Petitions that had updates in the past {} days.".format(
+            self.days
+        )
+        ctx["petitions"] = self.get_petitions()
+        return ctx
+
+
 class Statistics1(TemplateView):
     template_name = "petition/list.html"
 
@@ -84,7 +120,7 @@ class Statistics1(TemplateView):
         if not self.request.user.is_authenticated:
             return []
 
-        # Query 1.5
+        # Query #1.5
         petitions = Petition.objects.annotate(
             votes_count=Subquery(
                 Vote.objects.filter(
@@ -413,7 +449,7 @@ class ArchiveChart1Export(View):
     def get_file(self) -> bytes:
         colours = ["3374cd", "992220", "469b57", "e4e144", "cd3333", "749920"]
         since = timezone.now() - timezone.timedelta(days=14)
-        # Query #1.4
+        # Query #1.1
         petitions = (
             Petition.objects.annotate(
                 signatories_qty=Subquery(
@@ -428,6 +464,7 @@ class ArchiveChart1Export(View):
             .order_by("-signatories_count")
             .values("signatories_count", "title")[:5]
         )
+        print("1.1: ", petitions.query)
 
         chart = PieChart2D(750, 400)
         chart.title = "5 most voted petitions since {}".format(
@@ -465,8 +502,8 @@ class ArchiveChart2Export(View):
             .order_by("-petitions_count")
             .values("first_name", "last_name", "petitions_count")[:5]
         )
-        # Query #1.1
-        print("1.1: ", petitions.query)
+        # Query #1.4
+        print("1.4: ", petitions.query)
 
         chart = PieChart2D(750, 400)
         chart.title = "Top authors by a number of petitions".format(
@@ -638,9 +675,9 @@ class UserVotesList(TemplateView):
     def get_petitions(self) -> List[Petition]:
         if not self.request.user.is_authenticated:
             return []
-        # Query 1.3
+
         petitions = Petition.objects.filter(votes__user_id=self.target_user.pk)
-        print("1.3: ", petitions.query)
+
         return list(petitions)
 
     def get_context_data(self, **kwargs):
