@@ -29,7 +29,7 @@
         </form>
 
         <form class="" action="{% url 'petition:statistics_3' %}">
-            <p>2.2  Show all the users who voted for all the petitions I've created
+            <p>2.2  Show all the users who voted for at least all the petitions I've created
                 <button class="btn btn-dark" type="submit">Search</button>
             </p>
         </form>
@@ -40,6 +40,12 @@
             </p>
         </form>
 
+        <form class="" action="{% url 'petition:statistics_5' %}">
+            <p>3.0  User: <input style="width: 50px;" type="number" name="user_id" placeholder="0">
+                -> All petitions -> Updated in 2weeks from now -> Show signatories' names
+                <button class="btn btn-dark" type="submit">Search</button>
+            </p>
+        </form>
 
     </div>
 {% endblock %}

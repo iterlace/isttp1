@@ -50,6 +50,7 @@ urlpatterns = [
     re_path(r"statistics/2/", views.Statistics2.as_view(), name="statistics_2"),
     re_path(r"statistics/3/", views.Statistics3.as_view(), name="statistics_3"),
     re_path(r"statistics/4/", views.Statistics4.as_view(), name="statistics_4"),
+    re_path(r"statistics/5/", views.Statistics5.as_view(), name="statistics_5"),
     re_path(r"statistics/", views.Statistics.as_view(), name="statistics"),
     re_path(r"^", views.Home.as_view(), name="home"),
 ]

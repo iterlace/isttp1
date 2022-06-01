@@ -236,6 +236,46 @@ WHERE (SELECT count(1) FROM petition_petition p WHERE p.author_id = u.id AND cre
         return ctx
 
 
+class Statistics5(TemplateView):
+    template_name = "account/list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user_id = self.request.GET.get("user_id", "").strip()
+        if not self.user_id:
+            return HttpResponseRedirect(reverse("petition:statistics"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_users(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+
+        # Query #2.1
+        users = User.objects.raw(
+            """
+SELECT DISTINCT ON (usr.id) usr.*
+FROM petition_petition as petition
+         INNER JOIN petition_vote vote ON petition.id = vote.petition_id
+         INNER JOIN account_user usr ON vote.user_id = usr.id
+WHERE (SELECT MAX(news.created_at)
+       FROM petition_news AS news
+       WHERE news.petition_id = petition.id) > %s
+  AND petition.id IN (SELECT petition_id FROM petition_vote vote_inner WHERE vote_inner.user_id = %s);
+            """,
+            (timezone.now() - timezone.timedelta(days=14), self.user_id),
+        )
+        print("3: ", users.query)
+        return list(users)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_title"] = (
+            "User: {} -> All petitions -> Updated in 2weeks from now -> Show signatories' "
+            "names".format(self.user_id)
+        )
+        ctx["users"] = self.get_users()
+        return ctx
+
+
 class Search(TemplateView):
     template_name = "petition/search.html"
 
