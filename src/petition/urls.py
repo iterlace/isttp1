@@ -23,6 +23,11 @@ urlpatterns = [
         views.ArchiveChart2Export.as_view(),
         name="export_archive_chart_2",
     ),
+    path(
+        "user/<int:id>/votes/",
+        views.UserVotesList.as_view(),
+        name="user_votes_list",
+    ),
     # Search
     path("search/", views.Search.as_view(), name="search"),
     # Petition
@@ -40,5 +45,10 @@ urlpatterns = [
         views.PetitionNewsDelete.as_view(),
         name="news_delete",
     ),
+    re_path(r"statistics/1/", views.Statistics1.as_view(), name="statistics_1"),
+    re_path(r"statistics/2/", views.Statistics2.as_view(), name="statistics_2"),
+    re_path(r"statistics/3/", views.Statistics3.as_view(), name="statistics_3"),
+    re_path(r"statistics/4/", views.Statistics4.as_view(), name="statistics_4"),
+    re_path(r"statistics/", views.Statistics.as_view(), name="statistics"),
     re_path(r"^", views.Home.as_view(), name="home"),
 ]

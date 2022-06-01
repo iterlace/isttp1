@@ -86,7 +86,8 @@
                         <h5>Latest signatories</h5>
                         <div class="list-group">
                             {% for vote in latest_votes %}
-                                <a class="list-group-item list-group-item-action flex-column align-items-start">
+                                <a href="{% url 'petition:user_votes_list' vote.user.pk %}"
+                                   class="list-group-item list-group-item-action flex-column align-items-start">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h5 class="mb-1">{{ vote.user.full_name }}</h5>
                                         <span>{{ vote.created_at|timesince }}</span>

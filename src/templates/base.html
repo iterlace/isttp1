@@ -34,6 +34,9 @@
                                 <span class="visually-hidden">(current)</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'petition:statistics' %}">Statistics</a>
+                        </li>
                         {% if request.user.is_authenticated %}
                             <li class="nav-item me-3">
                                 <a class="nav-link" href="{% url 'petition:create' %}"><i
@@ -72,7 +75,7 @@
                                 <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
                                    href="#"
                                    role="button" aria-haspopup="true" aria-expanded="false">
-                                    {{ request.user.first_name }}
+                                    {{ request.user.full_name }}
                                 </a>
                                 <div class="dropdown-menu">
                                     {% if request.user.is_staff %}

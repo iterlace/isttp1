@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div class="container mt-3 mb-5">
+        <h1>Statistics</h1>
+
+        <form class="" action="{% url 'petition:statistics_1' %}">
+            <p>
+                1.5  Show petitions which have collected more than
+                <input style="width: 50px;" type="text" name="votes" placeholder="0">
+                votes in the past 10 days.
+                <button class="btn btn-dark" type="submit">Search</button>
+            </p>
+        </form>
+
+        <form class="" action="{% url 'petition:statistics_2' %}">
+            <p>2.1  Show all the users who voted for at least all the petitions I voted for
+                <button class="btn btn-dark" type="submit">Search</button>
+            </p>
+        </form>
+
+        <form class="" action="{% url 'petition:statistics_3' %}">
+            <p>2.2  Show all the users who voted for all the petitions I've created
+                <button class="btn btn-dark" type="submit">Search</button>
+            </p>
+        </form>
+
+        <form class="" action="{% url 'petition:statistics_4' %}">
+            <p>2.3  Show users who have created more petitions in 2 weeks than I have.
+                <button class="btn btn-dark" type="submit">Search</button>
+            </p>
+        </form>
+
+
+    </div>
+{% endblock %}

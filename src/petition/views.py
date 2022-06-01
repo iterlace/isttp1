@@ -8,11 +8,12 @@ from pygooglechart import PieChart2D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count, F, Q, Subquery, Sum
+from django.db.models import Count, F, OuterRef, Q, Subquery, Sum
 from django.http import (
     FileResponse,
     HttpResponse,
     HttpResponseForbidden,
+    HttpResponseNotFound,
     HttpResponseRedirect,
 )
 from django.shortcuts import redirect, render, resolve_url
@@ -44,7 +45,10 @@ class Home(TemplateView):
         if not self.request.user.is_authenticated:
             return []
 
-        return list(self.request.user.signed_petitions.all())
+        # Query #1.2
+        qs = self.request.user.signed_petitions.all()
+        print("1.2:", qs.query)
+        return list(qs)
 
     def get_trending_petitions(self) -> List[Petition]:
         limit = 20
@@ -60,6 +64,139 @@ class Home(TemplateView):
         ctx["signed_petitions"] = self.get_signed_petitions()
         ctx["trending_petitions"] = self.get_trending_petitions()
         ctx["owned_petitions"] = self.get_owned_petitions()
+        return ctx
+
+
+class Statistics(TemplateView):
+    template_name = "statistics.html"
+
+
+class Statistics1(TemplateView):
+    template_name = "petition/list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.votes = self.request.GET.get("votes", "").strip()
+        if not self.votes:
+            return HttpResponseRedirect(reverse("petition:statistics"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_petitions(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+
+        # Query 1.5
+        petitions = Petition.objects.annotate(
+            votes_count=Subquery(
+                Vote.objects.filter(
+                    created_at__gte=timezone.now() - timezone.timedelta(days=10),
+                    petition_id=OuterRef("pk"),
+                )
+                .annotate(cnt=Count("id"))
+                .values("cnt")[:1]
+            )
+        ).filter(votes_count__gte=self.votes)
+        print("1.5: ", petitions.query)
+        return list(petitions)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_title"] = (
+            "Petitions which have collected >= {} votes in "
+            "the past 10 days. votes:".format(self.votes)
+        )
+        ctx["petitions"] = self.get_petitions()
+        return ctx
+
+
+class Statistics2(TemplateView):
+    template_name = "account/list.html"
+
+    def get_users(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+
+        # Query #2.1
+        petitions = User.objects.raw(
+            """
+SELECT * FROM account_user u
+WHERE array(SELECT v.petition_id FROM petition_vote v WHERE v.user_id = u.id) @>
+     array(SELECT v.petition_id FROM petition_vote v WHERE v.user_id = %s) AND u.id != %s
+            """,
+            (self.request.user.pk, self.request.user.pk),
+        )
+        print("2.1: ", petitions.query)
+        return list(petitions)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx[
+            "list_title"
+        ] = "All the users who voted for at least all the petitions I voted for"
+        ctx["users"] = self.get_users()
+        return ctx
+
+
+class Statistics3(TemplateView):
+    template_name = "account/list.html"
+
+    def get_users(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+
+        if self.request.user.owned_petitions.count() == 0:
+            return []
+
+        # Query #2.2
+        users = User.objects.raw(
+            """
+SELECT * FROM account_user u
+WHERE array(SELECT v.petition_id FROM petition_vote v WHERE v.user_id = u.id) @>
+     array(SELECT p.id FROM petition_petition p WHERE p.author_id = %s) 
+     AND u.id != %s
+            """,
+            (self.request.user.pk, self.request.user.pk),
+        )
+        print(users.query)
+        return list(users)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_title"] = "Users who voted for all the petitions I've created"
+        ctx["users"] = self.get_users()
+        return ctx
+
+
+class Statistics4(TemplateView):
+    template_name = "account/list.html"
+
+    def get_users(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+
+        if self.request.user.owned_petitions.count() == 0:
+            return []
+
+        since = timezone.now() - timezone.timedelta(days=14)
+
+        # Query #2.3
+        users = User.objects.raw(
+            """
+SELECT * FROM account_user u
+WHERE (SELECT count(1) FROM petition_petition p WHERE p.author_id = u.id AND created_at >= %s) >
+     (SELECT count(1) FROM petition_petition p WHERE p.author_id = %s AND created_at >= %s) 
+     AND u.id != %s
+            """,
+            (since, self.request.user.pk, since, self.request.user.pk),
+        )
+        print(users.query)
+        return list(users)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx[
+            "list_title"
+        ] = "Users who have created more petitions in 2 weeks than I have"
+        ctx["users"] = self.get_users()
         return ctx
 
 
@@ -276,15 +413,24 @@ class ArchiveChart1Export(View):
     def get_file(self) -> bytes:
         colours = ["3374cd", "992220", "469b57", "e4e144", "cd3333", "749920"]
         since = timezone.now() - timezone.timedelta(days=14)
+        # Query #1.4
         petitions = (
-            Petition.objects.filter(created_at__gte=since)
-            .filter(signatories_count__gte=1)
+            Petition.objects.annotate(
+                signatories_qty=Subquery(
+                    Vote.objects.filter(
+                        created_at__gte=since, petition_id=OuterRef("pk")
+                    )
+                    .annotate(qty=Count("id"))
+                    .values("qty")[:1]
+                )
+            )
+            .filter(signatories_qty__gte=1)
             .order_by("-signatories_count")
             .values("signatories_count", "title")[:5]
         )
 
         chart = PieChart2D(750, 400)
-        chart.title = "Most voted petitions (created since {})".format(
+        chart.title = "5 most voted petitions since {}".format(
             since.strftime("%d.%m.%Y")
         )
         chart.add_data([i["signatories_count"] for i in petitions])
@@ -319,6 +465,8 @@ class ArchiveChart2Export(View):
             .order_by("-petitions_count")
             .values("first_name", "last_name", "petitions_count")[:5]
         )
+        # Query #1.1
+        print("1.1: ", petitions.query)
 
         chart = PieChart2D(750, 400)
         chart.title = "Top authors by a number of petitions".format(
@@ -476,3 +624,27 @@ class PetitionNewsDelete(LoginRequiredMixin, DeleteView):
         form.instance.author_id = self.request.user.pk
         self.object = form.save()
         return HttpResponseRedirect(self.get_success_url())
+
+
+class UserVotesList(TemplateView):
+    template_name = "petition/list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.target_user = User.objects.filter(pk=self.kwargs["id"]).first()
+        if self.target_user is None:
+            return HttpResponseNotFound()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_petitions(self) -> List[Petition]:
+        if not self.request.user.is_authenticated:
+            return []
+        # Query 1.3
+        petitions = Petition.objects.filter(votes__user_id=self.target_user.pk)
+        print("1.3: ", petitions.query)
+        return list(petitions)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_title"] = f"{self.target_user.full_name} votes:"
+        ctx["petitions"] = self.get_petitions()
+        return ctx
